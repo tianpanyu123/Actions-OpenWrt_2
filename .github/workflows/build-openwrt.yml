@@ -75,7 +75,7 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        [ -e files ] && mv files openwrt/files
+        [ -e files ] && mv files chaos_calmer/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE chaos_calmer/.config
         chmod +x $DIY_P2_SH
         cd chaos_calmer
