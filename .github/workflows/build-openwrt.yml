@@ -17,11 +17,11 @@ on:
       ssh:
         description: 'SSH connection to Actions'
         required: false
-        default: 'false'
+        default: 'true'
 
 env:
   REPO_URL: https://github.com/openwrt/chaos_calmer
-  REPO_BRANCH: master
+  REPO_BRANCH: chaos_calmer
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1.sh
@@ -58,28 +58,28 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        git clone $REPO_URL -b $REPO_BRANCH chaos_calmer
+        ln -sf /workdir/chaos_calmer $GITHUB_WORKSPACE/chaos_calmer
 
     - name: Load custom feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF chaos_calmer/feeds.conf.default
         chmod +x $DIY_P1_SH
-        cd openwrt
+        cd chaos_calmer
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
+      run: cd chaos_calmer && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+      run: cd chaos_calmer && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
         [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE chaos_calmer/.config
         chmod +x $DIY_P2_SH
-        cd openwrt
+        cd chaos_calmer
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: SSH connection to Actions
@@ -92,7 +92,7 @@ jobs:
     - name: Download package
       id: package
       run: |
-        cd openwrt
+        cd chaos_calmer
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
@@ -101,7 +101,7 @@ jobs:
     - name: Compile the firmware
       id: compile
       run: |
-        cd openwrt
+        cd chaos_calmer
         echo -e "$(nproc) thread compile"
         make -j $(($(nproc)+5)) V=99
         echo "::set-output name=status::success"
@@ -118,17 +118,16 @@ jobs:
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
+        path: chaos_calmer/bin
 
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
+        cd chaos_calmer/bin/targets/*/*
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "::set-output name=status::success"
-        cp ../../../../.config .
     - name: Upload firmware directory
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
