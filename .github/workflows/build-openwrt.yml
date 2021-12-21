@@ -61,27 +61,6 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH chaos_calmer
         ln -sf /workdir/chaos_calmer $GITHUB_WORKSPACE/chaos_calmer
 
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF chaos_calmer/feeds.conf.default
-        chmod +x $DIY_P1_SH
-        cd chaos_calmer
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
-    - name: Update feeds
-      run: cd chaos_calmer && ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: cd chaos_calmer && ./scripts/feeds install -a
-
-    - name: Load custom configuration
-      run: |
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE chaos_calmer/.config
-        chmod +x $DIY_P2_SH
-        cd chaos_calmer
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
       if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
